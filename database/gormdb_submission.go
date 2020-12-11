@@ -80,8 +80,17 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	return &submission, nil
 }
 
+// GetSubmissions returns all submissions matching the query.
+func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error) {
+	var submissions []*pb.Submission
+	if err := db.conn.Find(&submissions, &query).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}
+
 // GetSubmissions returns all submissions for the active assignment for the given course.
-func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
+func (db *GormDB) GetSubmissionsForCourse(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
@@ -140,4 +149,9 @@ func (db *GormDB) UpdateReview(query *pb.Review) error {
 		Ready:    query.Ready,
 		Score:    query.Score,
 	}).Error
+}
+
+// DeleteReview removes all reviews matching the query
+func (db *GormDB) DeleteReview(query *pb.Review) error {
+	return db.conn.Delete(&pb.Review{}, &query).Error
 }
